@@ -9,3 +9,17 @@ st.set_page_config(
     layout="wide",  # Adjust layout as needed
 )
 
+# Load data
+def load_data(file_path: str) -> pd.DataFrame | None:
+    """Load data from CSV file"""
+    try:
+        return pd.read_csv(file_path)
+    except Exception as e:
+        st.error(f"Failed to load data: {e}")
+        return None
+
+# Sample data (replace with your CSV path)
+df = load_data("Processed_GlobalSuperstore.csv")
+
+if df is None:
+    st.stop()
