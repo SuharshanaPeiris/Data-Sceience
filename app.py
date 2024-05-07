@@ -1,86 +1,63 @@
-import streamlit as st
+# Import necessary libraries
 import pandas as pd
+import streamlit as st
 import plotly.express as px
 
-# Setting page configuration
-st.set_page_config(
-    page_title="Global Superstore Data Sales Dashboard",
-    page_icon=":chart_with_upwards_trend:",
-    layout="wide",  # Adjust layout as needed
-)
-
-# Load data
-def load_data(file_path: str) -> pd.DataFrame | None:
-    """Load data from CSV file"""
-    try:
-        return pd.read_csv(file_path)
-    except Exception as e:
-        st.error(f"Failed to load data: {e}")
-        return None
-
-# Sample data (replace with your CSV path)
-df = load_data("Processed_GlobalSuperstore.csv")
-
-if df is None:
-    st.stop()
-
-# Create sidebar for interactive filters
-def create_filters(df: pd.DataFrame) -> pd.DataFrame:
-    """Create filters for data"""
-    with st.sidebar:
-        # Filter by category
-        category_filter = st.multiselect(
-            "Filter by Category",
-            options=df["Category"].unique(),
-            default=df["Category"].unique(),
-        )
-        df_filtered = df[df["Category"].isin(category_filter)]
-
-        # Filter by sales channel (if applicable)
-            sales_channel_filter = st.multiselect(
-                "Filter by Sales Channel",
-                options=["Sales Channel"].unique(),
-                default=["Sales Channel"].unique(),
-            )
-            df_filtered = df_filtered[df_filtered["Sales Channel"].isin(sales_channel_filter)]
-
-        return df_filtered
-
-df_filtered = create_filters(df)
-
-
-# Key performance indicators (KPIs)
+# Key Performance Indicators (KPIs)
 def calculate_kpis(df: pd.DataFrame) -> tuple:
     """Calculate KPIs"""
-    kpi1 = st.metric(label="Total Sales", value=df["Sales"].sum().astype(float))
-    kpi2 = st.metric(label="Average Profit Margin", value=df["Profit"].mean().astype(float))
-    return kpi1, kpi2
+    total_sales = df["Sales"].sum().astype(float)
+    average_profit_margin = df["Profit"].mean().astype(float)
+    return total_sales, average_profit_margin
 
-kpi1, kpi2 = calculate_kpis(df_filtered)
+# Create Streamlit Metrics
+def create_kpi_metrics(kpi_values: tuple) -> None:
+    """Create Streamlit metrics"""
+    kpi1 = st.metric(label="Total Sales", value=kpi_values[0])
+    kpi2 = st.metric(label="Average Profit Margin", value=kpi_values[1])
 
 # Visualizations
-def create_visualizations(df: pd.DataFrame) -> None:
+def create_visualizations(df: pd.DataFrame) -> dict:
     """Create visualizations"""
+    visualizations = {}
+
     # Visualization 1: Sales by Region
     sales_by_region = px.bar(df, x="Region", y="Sales", color="Region", title="Sales by Region")
+    visualizations["sales_by_region"] = sales_by_region
 
-    # Add some space between visualizations
-    st.markdown("---")
-
-   # Visualization 2: Sales by Category (Pie Chart)
-    sales_by_category_pie = px.pie(df_filtered, values="Sales", names="Category", title="Sales by Category")
-
-    # Add some space between visualizations
-    st.markdown("---")
+    # Visualization 2: Sales by Category (Pie Chart)
+    sales_by_category_pie = px.pie(df, values="Sales", names="Category", title="Sales by Category")
+    visualizations["sales_by_category_pie"] = sales_by_category_pie
 
     # Visualization 3: Sales by Sub-Category
     sales_by_subcategory = px.bar(df, x="Sub-Category", y="Sales", color="Sub-Category", title="Sales by Sub-Category")
-
-    # Add some space between visualizations
-    st.markdown("---")
+    visualizations["sales_by_subcategory"] = sales_by_subcategory
 
     # Visualization 4: Profit by Country
     profit_by_country = px.bar(df, x="Country", y="Profit", color="Country", title="Profit by Country")
+    visualizations["profit_by_country"] = profit_by_country
 
+    return visualizations
 
-create_visualizations(df)
+# Main Application
+def main() -> None:
+    """Main application"""
+    # Load data
+    df = pd.read_csv("data.csv")
+
+    # Calculate KPIs
+    kpi_values = calculate_kpis(df)
+
+    # Create Streamlit metrics
+    create_kpi_metrics(kpi_values)
+
+    # Create visualizations
+    visualizations = create_visualizations(df)
+
+    # Display visualizations
+    for visualization in visualizations.values():
+        st.plotly_chart(visualization)
+        st.markdown("---")
+
+if __name__ == "__main__":
+    main()
