@@ -23,3 +23,27 @@ df = load_data("Processed_GlobalSuperstore.csv")
 
 if df is None:
     st.stop()
+
+# Create sidebar for interactive filters
+def create_filters(df: pd.DataFrame) -> pd.DataFrame:
+    """Create filters for data"""
+    with st.sidebar:
+        # Filter by category
+        category_filter = st.multiselect(
+            "Filter by Category",
+            options=df["Category"].unique(),
+            default=df["Category"].unique(),
+        )
+        df_filtered = df[df["Category"].isin(category_filter)]
+
+        # Filter by sales channel (if applicable)
+            sales_channel_filter = st.multiselect(
+                "Filter by Sales Channel",
+                options=["Sales Channel"].unique(),
+                default=["Sales Channel"].unique(),
+            )
+            df_filtered = df_filtered[df_filtered["Sales Channel"].isin(sales_channel_filter)]
+
+        return df_filtered
+
+df_filtered = create_filters(df)
